@@ -3,8 +3,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { TimetableGrid, TimeSlot } from './TimetableGrid';
-import { Download, Users, User, Calendar } from 'lucide-react';
+import { EditableTimetableGrid } from './EditableTimetableGrid';
+import { ResourceManager } from './ResourceManager';
+import { Download, Users, User, Calendar, Edit3, Eye } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 
 // Sample timetable data with conflict-free scheduling
 const SAMPLE_SCHEDULE: TimeSlot[] = [
@@ -49,12 +54,18 @@ const TEACHERS = ['Dr. Smith', 'Prof. Johnson', 'Ms. Williams', 'Dr. Brown'];
 export const TimetableManager = () => {
   const [viewType, setViewType] = useState<'student' | 'teacher' | 'combined'>('combined');
   const [selectedTeacher, setSelectedTeacher] = useState<string>('');
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [schedule, setSchedule] = useState<TimeSlot[]>(SAMPLE_SCHEDULE);
+  const [subjects, setSubjects] = useState(['Programming', 'Mathematics', 'English', 'Digital Electronics', 'Computer Lab']);
+  const [teachers, setTeachers] = useState(TEACHERS);
+  const [rooms, setRooms] = useState(['Room 101', 'Room 102', 'Room 103', 'Room 104', 'Computer Lab', 'Room 105', 'Room 106']);
+  const { toast } = useToast();
 
   const exportToCSV = () => {
     const headers = ['Day', 'Time', 'Subject', 'Teacher', 'Room'];
     const csvContent = [
       headers.join(','),
-      ...SAMPLE_SCHEDULE.map(slot => 
+      ...schedule.map(slot => 
         [slot.day, slot.time, slot.subject, slot.teacher, slot.room].join(',')
       )
     ].join('\n');
@@ -66,17 +77,23 @@ export const TimetableManager = () => {
     a.download = `bca-timetable-${viewType}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
+    toast({ title: "Success", description: "Timetable exported successfully!" });
   };
 
   const getTeacherStats = () => {
-    return TEACHERS.map(teacher => {
-      const classes = SAMPLE_SCHEDULE.filter(slot => slot.teacher === teacher);
+    return teachers.map(teacher => {
+      const classes = schedule.filter(slot => slot.teacher === teacher);
       return {
         name: teacher,
         totalClasses: classes.length,
         subjects: [...new Set(classes.map(c => c.subject))],
       };
     });
+  };
+
+  const handleScheduleUpdate = (newSchedule: TimeSlot[]) => {
+    setSchedule(newSchedule);
+    toast({ title: "Success", description: "Schedule updated successfully!" });
   };
 
   return (
@@ -95,6 +112,27 @@ export const TimetableManager = () => {
             </div>
             
             <div className="flex flex-wrap gap-3">
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="edit-mode"
+                  checked={isEditMode}
+                  onCheckedChange={setIsEditMode}
+                />
+                <Label htmlFor="edit-mode" className="flex items-center gap-1">
+                  {isEditMode ? <Edit3 className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {isEditMode ? 'Edit Mode' : 'View Mode'}
+                </Label>
+              </div>
+              
+              <ResourceManager
+                subjects={subjects}
+                teachers={teachers}
+                rooms={rooms}
+                onUpdateSubjects={setSubjects}
+                onUpdateTeachers={setTeachers}
+                onUpdateRooms={setRooms}
+              />
+              
               <Button 
                 variant={viewType === 'combined' ? 'default' : 'outline'}
                 onClick={() => setViewType('combined')}
@@ -137,7 +175,7 @@ export const TimetableManager = () => {
                   <SelectValue placeholder="Choose a teacher" />
                 </SelectTrigger>
                 <SelectContent>
-                  {TEACHERS.map(teacher => (
+                  {teachers.map(teacher => (
                     <SelectItem key={teacher} value={teacher}>
                       {teacher}
                     </SelectItem>
@@ -174,28 +212,65 @@ export const TimetableManager = () => {
 
         {/* Timetable Grid */}
         {viewType === 'combined' && (
-          <TimetableGrid 
-            schedule={SAMPLE_SCHEDULE}
-            title="Complete BCA First Year Schedule"
-            viewType="student"
-          />
+          isEditMode ? (
+            <EditableTimetableGrid 
+              schedule={schedule}
+              title="Complete BCA First Year Schedule (Editable)"
+              viewType="student"
+              subjects={subjects}
+              teachers={teachers}
+              rooms={rooms}
+              onUpdateSchedule={handleScheduleUpdate}
+            />
+          ) : (
+            <TimetableGrid 
+              schedule={schedule}
+              title="Complete BCA First Year Schedule"
+              viewType="student"
+            />
+          )
         )}
 
         {viewType === 'student' && (
-          <TimetableGrid 
-            schedule={SAMPLE_SCHEDULE}
-            title="Student Timetable - BCA First Year"
-            viewType="student"
-          />
+          isEditMode ? (
+            <EditableTimetableGrid 
+              schedule={schedule}
+              title="Student Timetable - BCA First Year (Editable)"
+              viewType="student"
+              subjects={subjects}
+              teachers={teachers}
+              rooms={rooms}
+              onUpdateSchedule={handleScheduleUpdate}
+            />
+          ) : (
+            <TimetableGrid 
+              schedule={schedule}
+              title="Student Timetable - BCA First Year"
+              viewType="student"
+            />
+          )
         )}
 
         {viewType === 'teacher' && selectedTeacher && (
-          <TimetableGrid 
-            schedule={SAMPLE_SCHEDULE}
-            title={`Individual Teacher Schedule`}
-            viewType="teacher"
-            teacherFilter={selectedTeacher}
-          />
+          isEditMode ? (
+            <EditableTimetableGrid 
+              schedule={schedule}
+              title={`Individual Teacher Schedule (Editable)`}
+              viewType="teacher"
+              teacherFilter={selectedTeacher}
+              subjects={subjects}
+              teachers={teachers}
+              rooms={rooms}
+              onUpdateSchedule={handleScheduleUpdate}
+            />
+          ) : (
+            <TimetableGrid 
+              schedule={schedule}
+              title={`Individual Teacher Schedule`}
+              viewType="teacher"
+              teacherFilter={selectedTeacher}
+            />
+          )
         )}
 
         {viewType === 'teacher' && !selectedTeacher && (

@@ -48,9 +48,18 @@ All colors MUST be HSL.
     --gradient-secondary: linear-gradient(135deg, hsl(146 60% 51%), hsl(260 100% 67%));
     --gradient-subtle: linear-gradient(180deg, hsl(210 20% 98%), hsl(210 30% 96%));
     
-    /* Shadows */
-    --shadow-soft: 0 4px 6px -1px hsl(210 100% 56% / 0.1), 0 2px 4px -1px hsl(210 100% 56% / 0.06);
-    --shadow-medium: 0 10px 15px -3px hsl(210 100% 56% / 0.1), 0 4px 6px -2px hsl(210 100% 56% / 0.05);
+    /* Additional design tokens for the timetable system */
+    --success: 146 60% 51%;
+    --warning: 45 100% 51%;
+    --info: 210 100% 56%;
+    
+    /* Animation easing */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    
+    /* Interactive states */
+    --hover-lift: 0 8px 25px -8px hsl(210 100% 56% / 0.15);
+    --focus-ring: 0 0 0 3px hsl(210 100% 56% / 0.2);
 
     --radius: 0.75rem;
 
